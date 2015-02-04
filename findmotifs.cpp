@@ -23,6 +23,14 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     std::vector<bits_t> result;
 
     // TODO: implement your solution here
+    //Psuedocode:
+//    for each bit:
+//        if up to the d'th bit to flip:
+//            stop
+//        else:
+//        flip or don't flip (try both)
+//          add to solution space
+//        
 
     return result;
 }
