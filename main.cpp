@@ -6,7 +6,7 @@
  * Copyright (c) 2014 Georgia Institute of Technology. All Rights Reserved.
  */
 // You DO NOT need to change anything in this file.
-#include <mpi.h>
+//#include <mpi.h>
 #include <time.h> // for clock_gettime()
 
 #include <vector>
@@ -29,7 +29,7 @@ void printUsage()
     std::cerr << "        <outputfile> (optional)   The output file, will contain all solutions as integers (default: stdout)." << std::endl;
 }
 
-
+/*
 int main(int argc, char *argv[])
 {
     // set up MPI
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(comm, &p);
     MPI_Comm_rank(comm, &rank);
 
-    /* code */
+    /* code 
     //testrandom(10, 32, 9);
     bits_t* input;// = getrandom(10, 32, 9);
     if (rank == 0)
@@ -147,4 +147,17 @@ int main(int argc, char *argv[])
     // finalize MPI
     MPI_Finalize();
     return 0;
+}*/
+
+int main() {
+
+    unsigned int n=2, l=4, d=2; 
+    std::vector<bits_t> results;
+    const bits_t input[2] = {9, 8};
+
+    results = findmotifs(n, l, d, input);
+
+    return 0;
+
+
 }

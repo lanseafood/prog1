@@ -3,6 +3,9 @@
 #include "hamming.h"
 #include <mpi.h>
 
+#define WORK 1
+#define DIE 2
+
 std::vector<bits_t> findmotifs_worker(const unsigned int n,
                        const unsigned int l,
                        const unsigned int d,
@@ -19,6 +22,31 @@ std::vector<bits_t> findmotifs_worker(const unsigned int n,
 
 void worker_main()
 {
+
+  std::vector<bits_t> partial_results;
+  MPI_Status status;
+  std::vector<bits_t> worker_results;
+
+  //how to receive input from master...?
+
+  while(1) {
+    //receive msg from master
+    MPI_Recv(&partial_results, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    
+    if (status.MPI_TAG == DIE) {
+      return;
+    }
+
+    //else do work
+    worker_results = findmotifs_worker(); //need to first figure out how to send input?
+
+    //send the result back
+    MPI_Send(&worker_results, 1, MPI_UNSIGNED, 0, 0, MPI_COMM_WORLD);
+
+
+
+  }
+
     // TODO:
     // 1.) receive input from master (including n, l, d, input, master-depth)
 
@@ -51,8 +79,51 @@ std::vector<bits_t> findmotifs_master(const unsigned int n,
 std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
                                 const bits_t* input, unsigned int master_depth)
 {
+
+ 
+  int num_tasks, rank;
+  MPI_Status status;
+  std::vector<bits_t> partial_results;
+  std::vector<bits_t> worker_results; //???
+
+  unsigned int k;
+
+  MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+  for (rank=1; rank<num_tasks; ++rank) {
+
+    partial_results = findmotifs_master(n, l, d, input, k);
+
+    MPI_Send(&partial_results, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
+
+  }
+
+  //loop over getting work til no more work remains
+  partial_results = findmotifs_master(n, l, d, input, k);
+
+  while (partial_results != NULL) {
+    //receive results from slave
+    MPI_Recv(&worker_results, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, & status);
+
+    //send slave a new work unit?
+    MPI_Send(&partial_results, 1, MPI_UNSIGNED, status.MPI_SOURCE, WORK, MPI_COMM_WORLD);
+
+    //get next unit of work to be done??
+    partial_results = findmotifs_master(n, l, d, input, k);
+  }
+
+  //receive all outstanding 
+  for (rank=1; rank<num_tasks; ++rank) {
+    MPI_Recv(&worker_results, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  }
+
+  //all slaves die
+  for (rank=1; rank<num_tasks; ++rank) {
+    MPI_Send(0, 0, MPI_INIT, rank, DIE, MPI_COMM_WORLD);
+  }
+
     // TODO
-    // 1.) send input to all workers (including n, l, d, input, depth)
+    // 1.) send input to all workers (including n, l, d, input, depth) <-- seeding the slaves?
 
     // 2.) solve problem till depth `master_depth` and then send subproblems
     //     to the workers and receive solutions in each communication
