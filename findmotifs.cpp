@@ -22,6 +22,11 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     // create an empty vector
     std::vector<bits_t> result;
 
+
+
+    
+
+
     // TODO: implement your solution here
 
     return result;
