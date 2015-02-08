@@ -29,7 +29,7 @@ void printUsage()
     std::cerr << "        <outputfile> (optional)   The output file, will contain all solutions as integers (default: stdout)." << std::endl;
 }
 
-/*
+
 int main(int argc, char *argv[])
 {
     // set up MPI
@@ -147,17 +147,6 @@ int main(int argc, char *argv[])
     // finalize MPI
     MPI_Finalize();
     return 0;
-}*/
-
-int main() {
-
-    unsigned int n=2, l=4, d=2; 
-    std::vector<bits_t> results;
-    const bits_t input[2] = {9, 8};
-
-    results = findmotifs(n, l, d, input);
-
-    return 0;
-
-
 }
+
+
