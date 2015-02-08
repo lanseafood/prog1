@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(comm, &p);
     MPI_Comm_rank(comm, &rank);
 
-    /* code 
+    /* code */
     //testrandom(10, 32, 9);
     bits_t* input;// = getrandom(10, 32, 9);
     if (rank == 0)
