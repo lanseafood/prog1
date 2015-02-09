@@ -68,21 +68,21 @@ std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned 
 
     for (int i=start; i<l; i++) {
         if (num_inversions < d) {
+
+//bool isPresent = (std::find(vec.begin(), vec.end(), target) != vec.end());
+
+ 
             enumerations.push_back(s1); //add the non inverted version
+//            std::cerr << "hi" <<s1 << std::endl;
 
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
-
+        
             s1 ^= 1 << (l-i-1); //flip ith bit
+    
             enumerations.push_back(s1);
-
-
+ //           std::cerr << s1 << std::endl;
             num_inversions++;
-
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
-            
-
-
-            
         }
         else { //we've reached d inversions, do nothing...?
             //enumerations.push_back(s1);
