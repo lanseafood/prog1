@@ -5,16 +5,13 @@ CC=mpic++
 CCFLAGS=-Wall -O3
 LDFLAGS=
  
-#all: generate_input findmotifs
-all: findmotifs
-#generate_input: generate_input.o
-#	$(CC) $(LDFLAGS) -o $@ $^
+all: generate_input findmotifs
 
-findmotifs: main.o findmotifs.o hamming.o
+generate_input: generate_input.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
-#findmotifs: main.o findmotifs.o mpi_findmotifs.o hamming.o
-#	$(CC) $(LDFLAGS) -o $@ $^
+findmotifs: main.o findmotifs.o mpi_findmotifs.o hamming.o
+	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.cpp %.h
 	$(CC) $(CCFLAGS) -c $<

@@ -23,7 +23,7 @@ std::vector<bits_t> findmotifs_worker(const unsigned int n,
 void worker_main()
 {
 
-  std::vector<bits_t> partial_results;
+ /* std::vector<bits_t> partial_results;
   MPI_Status status;
   std::vector<bits_t> worker_results;
 
@@ -42,10 +42,10 @@ void worker_main()
 
     //send the result back
     MPI_Send(&worker_results, 1, MPI_UNSIGNED, 0, 0, MPI_COMM_WORLD);
+*/
 
 
 
-  }
 
     // TODO:
     // 1.) receive input from master (including n, l, d, input, master-depth)
@@ -80,8 +80,8 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
                                 const bits_t* input, unsigned int master_depth)
 {
 
- 
-  int num_tasks, rank;
+ std::vector<bits_t> results;
+ /* int num_tasks, rank;
   MPI_Status status;
   std::vector<bits_t> partial_results;
   std::vector<bits_t> worker_results; //???
@@ -133,7 +133,7 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
 
     // 3.) receive last round of solutions
     // 4.) terminate (and let the workers know)
-
+*/
     return results;
 }
 
