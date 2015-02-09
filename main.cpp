@@ -6,7 +6,7 @@
  * Copyright (c) 2014 Georgia Institute of Technology. All Rights Reserved.
  */
 // You DO NOT need to change anything in this file.
-//#include <mpi.h>
+#include <mpi.h>
 #include <time.h> // for clock_gettime()
 
 #include <vector>
@@ -133,8 +133,12 @@ int main(int argc, char *argv[])
         // start timer
         //   we omit the file loading and argument parsing from the runtime
         //   timings, we measure the time needed by the master process
+
+        /*BEGIN TIME
         struct timespec t_start, t_end;
         clock_get_time(SYSTEM_CLOCK,  &t_start);
+        END TIME */
+
         if (p == 1)
         {
             std::cerr << "[WARNING]: Running the sequential solver. Start with mpirun to execute the parallel version." << std::endl;
@@ -147,6 +151,7 @@ int main(int argc, char *argv[])
             results = master_main(n, l, d, input, master_depth);
         }
         // end timer
+        /*BEGIN TIME
         clock_get_time(SYSTEM_CLOCK,  &t_end);
         // time in seconds
         double time_secs = (t_end.tv_sec - t_start.tv_sec)
@@ -154,6 +159,7 @@ int main(int argc, char *argv[])
 
         // output time
         std::cerr << time_secs << std::endl;
+        END TIME*/
 
         // write output file in ascending order
         std::sort(results.begin(), results.end());

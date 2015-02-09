@@ -1,6 +1,5 @@
 # Makefile for HPC 6220 Programming Assignment 1
-#CC=mpic++
-CC=gcc
+CC=mpic++
 #CCFLAGS=-Wall -g
 # activate for compiler optimizations:
 CCFLAGS=-Wall -O3
