@@ -19,6 +19,29 @@
 #include "findmotifs.h"
 #include "mpi_findmotifs.h"
 
+// ---------------------------- OSX
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
+
+void current_utc_time(struct timespec *ts) {
+    
+#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    ts->tv_sec = mts.tv_sec;
+    ts->tv_nsec = mts.tv_nsec;
+#else
+    clock_get_time(SYSTEM_CLOCK, ts);
+#endif
+    
+}
+// ------------------------------------
 
 void printUsage()
 {
@@ -111,7 +134,7 @@ int main(int argc, char *argv[])
         //   we omit the file loading and argument parsing from the runtime
         //   timings, we measure the time needed by the master process
         struct timespec t_start, t_end;
-        clock_gettime(CLOCK_MONOTONIC,  &t_start);
+        clock_get_time(SYSTEM_CLOCK,  &t_start);
         if (p == 1)
         {
             std::cerr << "[WARNING]: Running the sequential solver. Start with mpirun to execute the parallel version." << std::endl;
@@ -124,7 +147,7 @@ int main(int argc, char *argv[])
             results = master_main(n, l, d, input, master_depth);
         }
         // end timer
-        clock_gettime(CLOCK_MONOTONIC,  &t_end);
+        clock_get_time(SYSTEM_CLOCK,  &t_end);
         // time in seconds
         double time_secs = (t_end.tv_sec - t_start.tv_sec)
                          + (double) (t_end.tv_nsec - t_start.tv_nsec) * 1e-9;

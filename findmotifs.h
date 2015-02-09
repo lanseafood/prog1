@@ -29,5 +29,7 @@ typedef uint64_t bits_t;
  */
 std::vector<bits_t> findmotifs(unsigned int n, unsigned int l, unsigned int d,
                                const bits_t* input);
+std::vector<bits_t> buildSet(unsigned int l, unsigned int d,
+                             int counter, const bits_t bits, const bits_t* set);
 
 #endif // FINDMOTIFS_H

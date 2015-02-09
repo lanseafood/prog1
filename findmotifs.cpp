@@ -27,11 +27,6 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     // create an empty vector
     std::vector<bits_t> result;
 
-
-
-    
-
-
     // TODO: implement your solution here
 
 //
@@ -56,7 +51,7 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
 
 //iterated through each permutation for the first S1. No repeats allowed.
 
-const bits_t* buildSet(unsigned int l, unsigned int d,
+std::vector<bits_t> buildSet(unsigned int l, unsigned int d,
                        int counter, const bits_t bits, const bits_t* set){
     
     std::vector<bits_t> allPossibleVals;
@@ -75,5 +70,4 @@ const bits_t* buildSet(unsigned int l, unsigned int d,
     }
     return allPossibleVals;
 }
-
 
