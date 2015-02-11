@@ -70,11 +70,13 @@ void worker_main()
   unsigned int master_depth;
   
   //do these input receiving lines belong here or in loop?
-  MPI_Recv(&n, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  MPI_Recv(&l, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  MPI_Recv(&d, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  MPI_Recv(&input, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  MPI_Recv(&master_depth, 1, MPI_UNSIGNED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+  int rank = 0;
+  MPI_Bcast(&n, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&l, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
+  MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
   //need to receive input from master... above??? 
 
@@ -120,9 +122,7 @@ std::vector<bits_t> get_all(unsigned int n, unsigned int d, unsigned int l, uint
         if (num_inversions < d) {
 
 //bool isPresent = (std::find(vec.begin(), vec.end(), target) != vec.end());
-
- 
-            enumerations.push_back(s1); //add the non inverted version
+			enumerations.push_back(s1); //add the non inverted version
 //            std::cerr << "hi" <<s1 << std::endl;
 
             enumerations = get_all(n, d, l, s1, enumerations, i+1, num_inversions, k);
@@ -198,18 +198,18 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
   MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
   unsigned i;
 
+  rank = 0;
+  MPI_Bcast(&n, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&l, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  MPI_Bcast(&input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+  MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+
   master_partial = findmotifs_master(n, l, d, input, master_depth);
 
   //send INPUT to workers...???
 
   for (rank=1; rank<num_tasks; rank++) {
-    MPI_Send(&n, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
-    MPI_Send(&l, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
-    MPI_Send(&d, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
-    MPI_Send(&input, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
-    MPI_Send(&master_depth, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
-
-
     send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
     MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
   }
