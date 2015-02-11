@@ -30,7 +30,7 @@ std::vector<bits_t> findmotifs_worker(const unsigned int n,
     k=startbitpos;
 
     //solve from k to l and produce results
-    enumerations = get_all(n, d, l, s1, enumerations, k, 0, l); //CHECK THIS LOGIC
+    enumerations = get_all(n, d, l, s1, enumerations, k, num_inversions, l); //CHECK THIS LOGIC
 
     std::sort(enumerations.begin(), enumerations.end());
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
@@ -62,23 +62,33 @@ void worker_main()
 
   //so has the master solved up unTIL master_depth, or through master-depth?
 
+
   uint64_t partial;
   MPI_Status status;
   std::vector<bits_t> worker_results;
   unsigned int n, d, l;
-  bits_t* input;
+  const bits_t* input;
   unsigned int master_depth;
   
   //do these input receiving lines belong here or in loop?
 
   int rank = 0;
   MPI_Bcast(&n, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  std::cerr<<"worker n: "<<n<<std::endl;
   MPI_Bcast(&l, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  std::cerr<<"worker l: " <<l<<std::endl;
   MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
-  MPI_Bcast(&input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
+  std::cerr<<"worker d: " <<d<<std::endl;
+
+  input = (bits_t *) malloc(n*sizeof(bits_t));
+
+  MPI_Bcast(&(input[0]), n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
+  std::cerr<<"worker input0: "<<input[0]<<std::endl;
+
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
   //need to receive input from master... above??? 
+
 
   //receive work from master
   while(1) {
@@ -149,19 +159,94 @@ std::vector<bits_t> findmotifs_master(const unsigned int n,
                                       const bits_t* input,
                                       const unsigned int till_depth)
 {
+
+	
+
     std::vector<bits_t> results;
 
     uint64_t possible;
     uint64_t elt;
-    int valid = 1;
-
+    int valid = 1, rank;
+    int num_tasks;
     std::vector<bits_t> enumerations;
+    unsigned i;
+    uint64_t send_to_worker;
+  	std::vector<bits_t> worker_results;
+    MPI_Status status;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    
 
     enumerations = get_all(n, d, l, input[0], enumerations, 0, 0, till_depth);
 
     std::sort(enumerations.begin(), enumerations.end());
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
 
+    for (unsigned x=0; x<enumerations.size(); x++) {
+    	std::cerr<<enumerations[x]<<std::endl;
+    }
+
+	for (rank=1; rank<num_tasks; rank++) {
+
+
+
+        possible = enumerations[rank-1]; //figure out what to do if num_tasks > enumerations.size
+
+        //std::cerr << "possible" << possible << " ";
+
+        for (unsigned i=1; i<n; i++) {
+            elt = input[i];
+            if (hamming(elt, possible) > d) {
+                //std::cerr << "im invalid"<< std::endl;
+                valid = 0; //i am invalid
+            }
+        }
+        if (valid==1) { //if valid against all si's
+            //results.push_back(possible);
+			//send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
+//std::cerr<<"in findmotifs msater";
+	    	send_to_worker = possible;
+	    	MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);            
+        }
+
+	    //send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
+	    //MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
+	}
+
+	i = num_tasks;
+	while (i!=enumerations.size()) { //is my criteria for stopping correct?
+    //receive results from slave -- is this mpi-unsigned??
+    	MPI_Recv(&worker_results, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); //size shouldn't be 1
+
+    	//add worker results to global results
+    	for (unsigned j=0; j<worker_results.size(); j++) {
+      		results.push_back(worker_results[j]);
+    	}
+
+    	possible = enumerations[i];
+
+		for (unsigned j=1; j<n; i++) {
+            elt = input[j];
+            if (hamming(elt, possible) > d) {
+                //std::cerr << "im invalid"<< std::endl;
+                valid = 0; //i am invalid
+            }
+        }
+        if (valid==1) { //if valid against all si's
+            //results.push_back(possible);
+			//send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
+	    	send_to_worker = possible;
+	    	MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);            
+        }
+
+
+    	//send_to_worker = master_partial[i]; //figure out what to do if doesn't exist
+    	//MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, status.MPI_SOURCE, WORK, MPI_COMM_WORLD);
+    	i++;
+  	}
+
+/*
     for (unsigned j=0; j< enumerations.size(); j++) {
         possible = enumerations[j];
 
@@ -178,8 +263,8 @@ std::vector<bits_t> findmotifs_master(const unsigned int n,
             results.push_back(possible);
         }
 
-    }
-
+    }*/
+std::cerr<<"done"<<std::endl;
 
     return results;
 }
@@ -188,35 +273,42 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
                                 const bits_t* input, unsigned int master_depth)
 {
 
+
   std::vector<bits_t> results;
 
   int num_tasks, rank;
   MPI_Status status;
   std::vector<bits_t> master_partial;
-  uint64_t send_to_worker;
+//  uint64_t send_to_worker;
   std::vector<bits_t> worker_results;
   MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
-  unsigned i;
+//  unsigned i;
 
   rank = 0;
   MPI_Bcast(&n, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  std::cerr<<"master n: " <<n<<std::endl;
   MPI_Bcast(&l, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
+  std::cerr<<"master l: " <<l<<std::endl;
   MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
-  MPI_Bcast(&input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+  std::cerr<<"master d: " <<d<<std::endl;
+
+  MPI_Bcast(input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+  std::cerr<<"master input0: "<<input[0]<<std::endl;
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
-  master_partial = findmotifs_master(n, l, d, input, master_depth);
+  //master_partial = findmotifs_master(n, l, d, input, master_depth);
 
   //send INPUT to workers...???
 
-  for (rank=1; rank<num_tasks; rank++) {
+/*  for (rank=1; rank<num_tasks; rank++) {
     send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
     MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);
   }
+*/
 
   //loop over getting work til no more work remains
 
-  i = num_tasks;
+  /*i = num_tasks;
   while (i!=master_partial.size()) { //is my criteria for stopping correct?
     //receive results from slave -- is this mpi-unsigned??
     MPI_Recv(&worker_results, 1, MPI_UNSIGNED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -230,6 +322,9 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
     MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, status.MPI_SOURCE, WORK, MPI_COMM_WORLD);
     i++;
   }
+*/
+
+  results = findmotifs_master(n,l,d,input,master_depth);
 
   //receive all outstanding solns?
   for (rank=1; rank<num_tasks; rank++) {
