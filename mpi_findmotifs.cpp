@@ -67,7 +67,7 @@ void worker_main()
   MPI_Status status;
   std::vector<bits_t> worker_results;
   unsigned int n, d, l;
-  const bits_t* input;
+  bits_t* input;
   unsigned int master_depth;
   
   //do these input receiving lines belong here or in loop?
@@ -82,7 +82,7 @@ void worker_main()
 
   input = (bits_t *) malloc(n*sizeof(bits_t));
 
-  MPI_Bcast(&(input[0]), n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
+  MPI_Bcast(&(input[0]), n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
   std::cerr<<"worker input0: "<<input[0]<<std::endl;
 
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
@@ -99,7 +99,7 @@ void worker_main()
     }
 
     //else do work
-    worker_results = findmotifs_worker(n, l, d, input, master_depth, partial);\
+    worker_results = findmotifs_worker(n, l, d, input, master_depth, partial);
 
     //send the result back
     MPI_Send(&worker_results, 1, MPI_UNSIGNED, 0, 0, MPI_COMM_WORLD);
@@ -184,7 +184,7 @@ std::vector<bits_t> findmotifs_master(const unsigned int n,
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
 
     for (unsigned x=0; x<enumerations.size(); x++) {
-    	std::cerr<<enumerations[x]<<std::endl;
+    	std::cerr<<"enum"<<x<<": " <<enumerations[x]<<std::endl;
     }
 
 	for (rank=1; rank<num_tasks; rank++) {
@@ -207,6 +207,7 @@ std::vector<bits_t> findmotifs_master(const unsigned int n,
 			//send_to_worker = master_partial[rank-1]; //figure out what to do if doesn't exist
 //std::cerr<<"in findmotifs msater";
 	    	send_to_worker = possible;
+        std::cerr<<"sending possible: "<<possible<<" possible"<<std::endl;
 	    	MPI_Send(&send_to_worker, 1, MPI_UNSIGNED, rank, WORK, MPI_COMM_WORLD);            
         }
 
@@ -292,7 +293,7 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
   MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
   std::cerr<<"master d: " <<d<<std::endl;
 
-  MPI_Bcast(input, n, MPI_UNSIGNED, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+  MPI_Bcast((void *)input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
   std::cerr<<"master input0: "<<input[0]<<std::endl;
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
