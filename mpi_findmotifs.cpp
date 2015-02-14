@@ -293,7 +293,11 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
   MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
   std::cerr<<"master d: " <<d<<std::endl;
 
+<<<<<<< HEAD
   MPI_Bcast((void *)input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+=======
+  MPI_Bcast((void*) input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input?? 32 bits vs 64 bits.
+>>>>>>> 70afaabbcf80ff8e836c0eca4d101404db1ab474
   std::cerr<<"master input0: "<<input[0]<<std::endl;
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
