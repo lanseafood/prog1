@@ -4,7 +4,79 @@
 #include <iostream>
 #include <algorithm>
 
+ struct Node {
+
+         uint64_t val; 
+         int num_inv;
+
+         Node *left;   
+         Node *right;  
+
+         /*Node(uint64_t item, int num) {
+            val = item;
+            num_inv = num;
+            left = NULL;
+            right = NULL;
+         }*/
+}; 
+
+
 std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned int l, uint64_t s1, std::vector<bits_t> enumerations, int start, int num_inversions);
+void insert_into_tree(unsigned int n, unsigned int d, unsigned int l, uint64_t s1, Node *tree, int start, int num_inversions);
+
+
+
+bool find(Node *root, uint64_t val) {
+
+    if (root==NULL) {
+        return false;
+    } else if (val==root->val) {
+        return true;
+    } else if (val < root->val) {
+        return find(root->left, val);
+    } else {
+        return find(root->right, val);
+    }
+}
+
+void insert(Node **root, uint64_t val, int num_inv) {
+    Node *temp = NULL;
+    uint64_t rootval;
+
+    if (!(*root)) {
+        temp = (Node *)malloc(sizeof(Node));
+        temp->left = NULL;
+        temp->right = NULL;
+        temp->val = val;
+        temp->num_inv = num_inv;
+        *root = temp;
+        return;
+    }
+
+    if (val < (*root)->val) {
+        //rootval= (*root)->val;
+        //std::cerr<<"inserting left "<<val<<", root val: " <<rootval<<std::endl;
+        insert(&(*root)->left, val, num_inv);
+    } else {
+        //std::cerr<<"inserting right "<<val<<std::endl;
+        insert(&(*root)->right, val, num_inv);
+    }
+}
+
+
+ void postorderPrint( Node *root ) {
+           // Print all the items in the tree to which root points.
+           // The items in the left subtree are printed first, followed 
+           // by the items in the right subtree and then the item in the
+           // root node.
+        if ( root != NULL ) {  // (Otherwise, there's nothing to print.)
+           postorderPrint( root->left );    // Print items in left subtree.
+           postorderPrint( root->right );   // Print items in right subtree.
+           std::cerr << root->val << " ";       // Print the root item.
+        }
+} // end postorderPrint()
+
+
 
 // implements the sequential findmotifs function
 std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
@@ -32,9 +104,26 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     uint64_t elt;
     int valid = 1;
 
+    uint64_t s1=input[0];
+
     std::vector<bits_t> enumerations;
 
-    enumerations = get_all_variations(n, d, l, input[0], enumerations, 0, 0);
+    //Node *root = new Node(s1,0);
+    Node *root = (Node *)malloc(sizeof(Node));
+    root->val = s1;
+    root->num_inv = 0;
+    root->left = NULL;
+    root->right = NULL;
+
+    insert_into_tree(n,d,l,s1,root,0,0);
+    //insert(&root, input[1], 0);
+    //insert(root, input, 0);
+    //std::cerr<<"root: " <<root->val << ", root left: " << root->left->val << std::endl;
+
+    postorderPrint(root);
+
+
+ /*   enumerations = get_all_variations(n, d, l, input[0], enumerations, 0, 0);
 
     std::sort(enumerations.begin(), enumerations.end());
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
@@ -61,9 +150,46 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
 
     }
 
-
+*/
 
     return result;
+}
+
+void insert_into_tree(unsigned int n, unsigned int d, unsigned int l, uint64_t s1, Node *tree, int start, int num_inversions) {
+
+    uint64_t val = s1;
+    bool check = false;
+
+    for (int i=start; i<l; i++) {
+        if (num_inversions < d) {
+            check = find(tree, val);
+
+            if (!check) { //non flipped bit
+                std::cerr<<"find: " <<check << ", val: " <<val<<std::endl;
+                insert(&tree, val, num_inversions);
+            }
+
+            insert_into_tree(n,d,l,val, tree,i+1,num_inversions); //no flip
+
+            //flipped bit
+            val ^= 1<<(l-i-1); //flip ith bit
+            check = find(tree, val);
+            num_inversions++;
+            if (!check) {
+                std::cerr<<"flip find: " <<check << ", val: " <<val<<", i: "<<i<<std::endl;
+                insert(&tree, val, num_inversions);
+            }
+
+            
+            insert_into_tree(n,d,l,val,tree,i+1,num_inversions); //flip
+        
+        } else {
+            if (!find(tree, val)) { //if doesn't exist
+                insert(&tree, val, num_inversions);
+            }
+        }
+    }
+
 }
 
 std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned int l, uint64_t s1, std::vector<bits_t> enumerations, int start, int num_inversions) {
