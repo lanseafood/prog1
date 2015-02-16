@@ -39,15 +39,19 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     std::sort(enumerations.begin(), enumerations.end());
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
 
+    for (unsigned i = 0; i<enumerations.size(); i++) {
+        std::cerr<<"enum: " << enumerations[i]<<std::endl;
+    }
+
     for (unsigned j=0; j< enumerations.size(); j++) {
         possible = enumerations[j];
 
         //std::cerr << "possible" << possible << " ";
-
+        valid = 1;
         for (int i=1; i<n; i++) {
             elt = input[i];
             if (hamming(elt, possible) > d) {
-                //std::cerr << "im invalid"<< std::endl;
+            //    std::cerr << "im invalid: "<< possible << std::endl;
                 valid = 0; //i am invalid
             }
         }
@@ -72,16 +76,27 @@ std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned 
 //bool isPresent = (std::find(vec.begin(), vec.end(), target) != vec.end());
 
  
-            enumerations.push_back(s1); //add the non inverted version
-//            std::cerr << "hi" <<s1 << std::endl;
-
+            //TO_DO EISHA: its inserting the same one multiple times
+            //std::cerr<<"size: " <<enumerations.size()<<std::cerr;
+            if (enumerations.size() == 0) {
+                enumerations.push_back(s1); //add the non inverted version
+                std::cerr << "s1 no flip" <<s1 << std::endl;
+                std::cerr<< "numinv no flip: " <<num_inversions <<std::endl;
+            } else if (enumerations.size()>0 && enumerations[enumerations.size()-1] != s1) {
+                enumerations.push_back(s1); //add the non inverted version
+                std::cerr << "s1 no flip" <<s1 << std::endl;
+                std::cerr<< "numinv no flip: " <<num_inversions <<std::endl;
+            }
+            
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
         
             s1 ^= 1 << (l-i-1); //flip ith bit
     
             enumerations.push_back(s1);
+            std::cerr<<"s1 flip: " << s1 << std::endl;
  //           std::cerr << s1 << std::endl;
             num_inversions++;
+            std::cerr<< "numinv flip: " <<num_inversions <<std::endl;
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
         }
         else { //we've reached d inversions, do nothing...?
