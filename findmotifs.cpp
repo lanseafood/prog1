@@ -96,11 +96,11 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     //                      result.size()
 
     // create an empty vector
- /*   std::vector<bits_t> result;
+ //   std::vector<bits_t> result;
 
 
     //now compare "s1" to all other ones in input
-    uint64_t possible;
+  /*  uint64_t possible;
     uint64_t elt;
     int valid = 1;
 
@@ -109,7 +109,7 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     std::vector<bits_t> enumerations;
 
     //Node *root = new Node(s1,0);
-    Node *root = (Node *)malloc(sizeof(Node));
+   /* Node *root = (Node *)malloc(sizeof(Node));
     root->val = s1;
     root->num_inv = 0;
     root->left = NULL;
@@ -121,12 +121,12 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     //std::cerr<<"root: " <<root->val << ", root left: " << root->left->val << std::endl;
 
     postorderPrint(root);
-
+*/
 
  /*   enumerations = get_all_variations(n, d, l, input[0], enumerations, 0, 0);
 
-    std::cerr<<"DONE"<<std::endl;
-    return enumerations;
+    //std::cerr<<"DONE"<<std::endl;
+    //return enumerations;
 
     std::sort(enumerations.begin(), enumerations.end());
     enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
@@ -153,14 +153,20 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
 
     }
 
-*/
 
+*/
 
 
     //DYNAMIC PROGRAMMING
     std::vector<std::vector<bits_t> > ans;
     std::vector<bits_t> temp;
     std::vector<std::vector<bits_t> > prev;
+    
+    std::vector<bits_t> prev_i_1;
+    std::vector<bits_t> prev_i;
+    std::vector<bits_t> ans_i_1;
+    std::vector<bits_t> ans_i;
+
     unsigned i_bit, i_inv;
     uint64_t s1 = input[0];
 
@@ -172,18 +178,47 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
     }
     //ans[l].push_back(s1);
 
+    ans_i_1 = ans[0];
+    ans_i = ans[1];
+
     for (unsigned int i=1; i<=d; i++) {
-        prev = ans;
+        //prev = ans;
+    	prev_i_1 = ans_i_1;
+    	prev_i = ans_i;
+
+    	ans_i_1.clear();
+    	ans_i.clear();
+
+        /*
         for (unsigned int j=0; j<prev.size(); j++) {
             ans[j].clear();
             //std::cerr<<"size: " <<ans[j].size()<<std::endl;
         }
+        */
 
         for (unsigned int j=i; j<=l; j++) {
             i_bit = s1&(1<<j-1);
             i_inv = i_bit ^ (1<<j-1);
 
             std::cerr<<"j: " <<j<<std::endl;
+
+            
+			for (unsigned int z=0; z<prev_i_1.size(); z++) {
+                ans_i.push_back(i_inv + prev_i_1[z]);
+                ans_i.push_back(prev_i_1[z]);
+                //std::cerr<<"hey: " <<prev[j-1][z]<<std::endl;
+            }
+            
+            for (unsigned int z=0; z<ans_i_1.size(); z++) {
+                ans_i.push_back(i_bit + ans_i_1[z]);
+            }
+            
+            ans_i_1 = ans_i;
+            ans_i.clear();
+            prev_i_1 = ans[j-1];
+
+            /*
+            //std::cerr<<"j: " <<j<<std::endl;
             for (unsigned int z=0; z<prev[j-1].size(); z++) {
                 ans[j].push_back(i_inv + prev[j-1][z]);
                 ans[j].push_back(prev[j-1][z]);
@@ -194,6 +229,8 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
                 ans[j].push_back(i_bit + ans[j-1][z]);
             }
 
+            */
+
             //for (unsigned int z=0; z<prev[j-1].size(); z++) {
             //    ans[j].push_back(prev[j-1][z]);
             //}
@@ -202,15 +239,22 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
         std::cerr<<"i: "<<i<<std::endl;
     }
 
-    ans[l].push_back(s1);
+    //ans[l].push_back(s1);
 
+    ans_i.push_back(s1);
+
+/*
     std::sort(ans[l].begin(), ans[l].end());
     ans[l].erase(std::unique(ans[l].begin(), ans[l].end()), ans[l].end());
+*/	
+
+	std::sort(ans_i.begin(), ans_i.end());
+    ans_i.erase(std::unique(ans_i.begin(), ans_i.end()), ans_i.end());
 
     int valid = 0;
     std::vector<bits_t> result;
     uint64_t possible, elt;
-
+/*
     for (unsigned j=0; j< ans[l].size(); j++) {
         possible = ans[l][j];
 
@@ -227,12 +271,33 @@ std::vector<bits_t> findmotifs(unsigned int n, unsigned int l,
             result.push_back(possible);
         }
 
-        std::cerr<<"j: "<<j<<std::endl;
+        //std::cerr<<"j: "<<j<<std::endl;
+    }
+	*/
+
+    
+	for (unsigned j=0; j< ans_i.size(); j++) {
+        possible = ans_i[j];
+
+        //std::cerr << "possible" << possible << " ";
+        valid = 1;
+        for (int i=1; i<n; i++) {
+            elt = input[i];
+            if (hamming(elt, possible) > d) {
+            //    std::cerr << "im invalid: "<< possible << std::endl;
+                valid = 0; //i am invalid
+            }
+        }
+        if (valid==1) { //if valid against all si's
+            result.push_back(possible);
+        }
+
+        //std::cerr<<"j: "<<j<<std::endl;
     }
 
-    uint64_t h = 6903923;
+    //uint64_t h = 6903923;
 
-    std::cerr<<"HI: " << hamming(h, s1)<<std::endl;
+    //std::cerr<<"HI: " << hamming(h, s1)<<std::endl;
 
     return result;
 }
@@ -302,6 +367,8 @@ std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned 
             }
             
             std::cerr<<"l="<<l<<", i="<<i<<", sending i+1="<<i+1<<std::endl;
+            std::sort(enumerations.begin(), enumerations.end());
+    		enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
         
             s1 ^= 1 << (l-i-1); //flip ith bit
@@ -311,6 +378,8 @@ std::vector<bits_t> get_all_variations(unsigned int n, unsigned int d, unsigned 
  //           std::cerr << s1 << std::endl;
             num_inversions++;
             std::cerr<< "numinv flip: " <<num_inversions <<std::endl;
+            std::sort(enumerations.begin(), enumerations.end());
+   			enumerations.erase(std::unique(enumerations.begin(), enumerations.end()), enumerations.end());
             enumerations = get_all_variations(n, d, l, s1, enumerations, i+1, num_inversions);
         }
         else { //we've reached d inversions, do nothing...?
