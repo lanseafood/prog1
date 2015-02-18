@@ -82,7 +82,7 @@ void worker_main()
 
   input = (bits_t *) malloc(n*sizeof(bits_t));
 
-  MPI_Bcast(&(input[0]), n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
+  //MPI_Bcast(&(input[0]), n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //receiving n unsigned ints?
   std::cerr<<"worker input0: "<<input[0]<<std::endl;
 
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
@@ -293,9 +293,9 @@ std::vector<bits_t> master_main(unsigned int n, unsigned int l, unsigned int d,
   MPI_Bcast(&d, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
   std::cerr<<"master d: " <<d<<std::endl;
 
-  MPI_Bcast((void *)input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
+  //MPI_Bcast((void *)input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input??
 
-  MPI_Bcast((void*) input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input?? 32 bits vs 64 bits.
+  //MPI_Bcast((void*) input, n, MPI_UINT64_T, rank, MPI_COMM_WORLD); //sending n unsigned ints as input?? 32 bits vs 64 bits.
   std::cerr<<"master input0: "<<input[0]<<std::endl;
   MPI_Bcast(&master_depth, 1, MPI_UNSIGNED, rank, MPI_COMM_WORLD);
 
